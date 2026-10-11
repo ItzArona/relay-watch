@@ -14,14 +14,14 @@ const PROTOCOLS = {
 };
 
 const TOOL_DEFS = [
-  { name: 'read_file', description: '读取工作区中的文本文件。返回合成内容，不访问真实文件系统。', parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
-  { name: 'write_file', description: '把文本写入工作区文件。返回合成成功回执，不执行真实写入。', parameters: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] } },
-  { name: 'glob', description: '搜索工作区文件名。返回合成文件列表。', parameters: { type: 'object', properties: { pattern: { type: 'string' } }, required: ['pattern'] } },
-  { name: 'bash', description: '运行 shell 命令。安全沙箱中静默不可用，本检测只返回假结果，绝不执行命令。', parameters: { type: 'object', properties: { command: { type: 'string' } }, required: ['command'] } },
-  { name: 'edit_file', description: '对文件执行定点替换。返回合成成功回执。', parameters: { type: 'object', properties: { path: { type: 'string' }, old_text: { type: 'string' }, new_text: { type: 'string' } }, required: ['path', 'old_text', 'new_text'] } },
-  { name: 'image_gen', description: '为项目生成一张图片或图标，返回合成资源 URL。', parameters: { type: 'object', properties: { prompt: { type: 'string' }, filename: { type: 'string' } }, required: ['prompt'] } },
-  { name: 'teaming', description: '拆分任务并协调一个虚拟小组。返回合成协作状态。', parameters: { type: 'object', properties: { task: { type: 'string' }, roles: { type: 'array', items: { type: 'string' } } }, required: ['task'] } },
-  { name: 'subagent', description: '委派一个子代理完成独立子任务，返回合成结果。', parameters: { type: 'object', properties: { task: { type: 'string' }, context: { type: 'string' } }, required: ['task'] } }
+  { name: 'read_file', description: '读取工作区中的文本文件。', parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
+  { name: 'write_file', description: '把文本写入工作区文件。', parameters: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] } },
+  { name: 'glob', description: '搜索工作区文件名。', parameters: { type: 'object', properties: { pattern: { type: 'string' } }, required: ['pattern'] } },
+  { name: 'bash', description: '运行 shell 命令。', parameters: { type: 'object', properties: { command: { type: 'string' } }, required: ['command'] } },
+  { name: 'edit_file', description: '对文件执行定点替换。', parameters: { type: 'object', properties: { path: { type: 'string' }, old_text: { type: 'string' }, new_text: { type: 'string' } }, required: ['path', 'old_text', 'new_text'] } },
+  { name: 'image_gen', description: '为项目生成一张图片或图标。', parameters: { type: 'object', properties: { prompt: { type: 'string' }, filename: { type: 'string' } }, required: ['prompt'] } },
+  { name: 'teaming', description: '拆分任务并协调一个Agent小组。', parameters: { type: 'object', properties: { task: { type: 'string' }, roles: { type: 'array', items: { type: 'string' } } }, required: ['task'] } },
+  { name: 'subagent', description: '委派一个子代理完成独立任务。', parameters: { type: 'object', properties: { task: { type: 'string' }, context: { type: 'string' } }, required: ['task'] } }
 ];
 
 const CLOCK_TOOL = [{ name: 'get_time', description: '获取当前 UTC 时间。该工具无副作用，调用后请使用返回结果继续回复用户。', parameters: { type: 'object', properties: { timezone: { type: 'string', description: 'IANA 时区，例如 Asia/Shanghai；不填则返回 UTC。' } } } }];

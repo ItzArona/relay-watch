@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="LLM API 中转投毒检测台：验证回复、工具调用与 agentic 行为。" />
+  <title>Relay Watch / 中转投毒侦测台</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Relay Watch 首页">
+        <span class="brand-mark"><i></i><i></i><i></i></span>
+        <span>RELAY<span class="brand-slash">/</span>WATCH</span>
+      </a>
+      <div class="topbar-meta">
+        <span class="status-dot"><b></b> LOCAL-FIRST</span>
+        <span class="topbar-divider"></span>
+        <span class="mono">BUILD 01.26</span>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero-section">
+        <div class="hero-copy">
+          <p class="eyebrow reveal reveal-1"><span class="eyebrow-line"></span>安全验证工具 / 适用于公共中转 API</p>
+          <h1 class="reveal reveal-2">先验<br /><em>再信任</em><span class="title-dot">.</span></h1>
+          <p class="hero-lede reveal reveal-3">把 LLM API 中转站当成不透明供应链。用真实请求验证它有没有篡改响应、吞掉工具调用，或把一个应当行动的 agent 变成只会说话的回声。</p>
+          <div class="hero-tags reveal reveal-4">
+            <span>NO BACKEND</span>
+            <span>NO KEY STORAGE</span>
+            <span>3-STAGE PROBE</span>
+          </div>
+        </div>
+        <aside class="signal-card reveal reveal-3" aria-label="检测原理">
+          <div class="signal-topline"><span>THREAT MODEL</span><span class="mono">RW-03</span></div>
+          <div class="signal-orbit"><div class="orbit-core">API<br /><strong>?</strong></div><span class="orbit-label label-a">PROMPT</span><span class="orbit-label label-b">TOOLS</span><span class="orbit-label label-c">REASONING</span></div>
+          <p>中转站攻击不一定返回错误。更危险的是：请求看似成功，模型却被静默降级、注入额外指令，或者关键工具链被替换。</p>
+          <div class="signal-foot"><span>三层交叉验证</span><span class="arrow">↗</span></div>
+        </aside>
+      </section>
+
+      <section class="workspace-grid" aria-label="检测工作区">
+        <div class="panel config-panel">
+          <div class="panel-heading">
+            <div><span class="section-index">01</span><h2>接入目标</h2></div>
+            <span class="panel-kicker">TARGET CONFIG</span>
+          </div>
+          <p class="panel-intro">所有探测在浏览器内发起。你的 API Key 不会被本页保存或上传到其他服务；中转站是否允许跨域由其自身配置决定。</p>
+
+          <form id="configForm" autocomplete="off">
+            <div class="field field-wide">
+              <label for="baseUrl">BaseURL <span class="required">必填 · 带 /v1</span></label>
+              <div class="input-wrap"><span class="input-prefix">↗</span><input id="baseUrl" type="url" placeholder="https://api.example.com/v1" spellcheck="false" required /><span class="input-state" id="baseUrlState"></span></div>
+              <small>必须是 API 根地址，例如 <code>https://host.example/v1</code>，不要填具体 endpoint。</small>
+            </div>
+
+            <div class="two-col">
+              <div class="field">
+                <label for="apiKey">API Key <span class="required">必填</span></label>
+                <div class="input-wrap"><span class="input-prefix">#</span><input id="apiKey" type="password" placeholder="sk-••••••••••••" spellcheck="false" required /><button class="input-action" id="toggleKey" type="button" aria-label="显示或隐藏 API Key">SHOW</button></div>
+              </div>
+              <div class="field">
+                <label for="protocol">协议类型</label>
+                <div class="select-wrap"><select id="protocol"><option value="chat">OpenAI Chat</option><option value="responses">OpenAI Responses</option><option value="anthropic">Anthropic Messages</option></select></div>
+              </div>
+            </div>
+
+            <div class="field model-field">
+              <label for="model">模型名字 <span class="required">必填</span></label>
+              <div class="model-row"><div class="input-wrap"><span class="input-prefix">◇</span><input id="model" list="modelList" type="text" placeholder="例如：claude-sonnet-4-5 / gpt-5" spellcheck="false" required /></div><button class="outline-button" id="fetchModelsBtn" type="button"><span class="button-icon">↻</span> 获取 models</button></div>
+              <datalist id="modelList"></datalist>
+              <small id="modelHint">可手填模型 ID；点击右侧按钮会请求 <code>/models</code>。</small>
+            </div>
+
+            <div class="thinking-block">
+              <div class="thinking-title"><span>思考能力</span><span class="thinking-note" id="thinkingNote">Chat · 选择兼容的思考字段</span></div>
+              <div id="chatThinking" class="thinking-controls">
+                <div class="select-wrap"><select id="chatThinkingMode"><option value="off">关闭额外思考参数</option><option value="budget">Token budget · 通用</option><option value="deepseek">DeepSeek · enable_thinking</option></select></div>
+                <label class="budget-input"><span>budget</span><input id="chatBudget" type="number" min="256" max="32768" step="256" value="4096" /></label>
+              </div>
+              <div id="reasoningThinking" class="thinking-controls hidden">
+                <div class="select-wrap"><select id="reasoningEffort"><option value="none">不指定 effort</option><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option></select></div>
+                <span class="protocol-pill" id="protocolPill">reasoning.effort</span>
+              </div>
+              <small id="thinkingHelp">Chat 会根据选项发送常见的 token budget 或 DeepSeek thinking 字段；不同中转实现可能只支持其中一种。</small>
+            </div>
+
+            <div class="advanced-row">
+              <label for="maxTokens">单轮最大输出 token</label><input id="maxTokens" type="number" min="256" max="131072" step="256" value="4096" />
+              <span>非流式 · 最多 6 轮工具回合</span>
+            </div>
+          </form>
+        </div>
+
+        <aside class="panel boundary-panel">
+          <div class="panel-heading compact"><div><span class="section-index">02</span><h2>为什么要测</h2></div></div>
+          <div class="boundary-list">
+            <article><span class="boundary-num">A</span><div><h3>回复层投毒</h3><p>中转可能篡改 system / developer 指令，吞掉 reasoning 字段，或在正常回答里拼入不可见内容。</p></div></article>
+            <article><span class="boundary-num">B</span><div><h3>工具层降级</h3><p>工具 schema 被删除、参数被改写，模型只能“假装调用”，agentic 工作流因此静默失效。</p></div></article>
+            <article><span class="boundary-num">C</span><div><h3>能力层伪装</h3><p>模型名称和计费看起来正确，实际上游被降级为另一个模型，长上下文和多轮执行能力消失。</p></div></article>
+          </div>
+          <div class="callout"><span class="callout-icon">!</span><p>检测结果是启发式信号，不是供应商取证。不要把真实生产密钥用于未知中转站。</p></div>
+        </aside>
+      </section>
+
+      <section class="probe-section" aria-label="探测阶段">
+        <div class="section-heading-row"><div><span class="section-index">03</span><h2>三阶段探测</h2></div><span class="panel-kicker">BEHAVIORAL PROBE / NON-STREAM</span></div>
+        <div class="stage-track">
+          <div class="track-line"><span id="trackProgress"></span></div>
+          <article class="stage-card" data-stage="simple"><div class="stage-number">01</div><div class="stage-status" data-stage-status>待运行</div><h3>PONG / 正式回复</h3><p>最小指令探测。验证请求是否真的到达目标模型，是否返回干净的 <code>pong</code>，并记录 API 是否暴露 reasoning / thinking 字段。</p><span class="stage-mark">↘</span></article>
+          <article class="stage-card" data-stage="tool"><div class="stage-number">02</div><div class="stage-status" data-stage-status>待运行</div><h3>TOOL / 获取时间</h3><p>提供一个无副作用的时间工具。观察模型是否产生合法 tool call，以及它能否在收到工具结果后继续完成回复。</p><span class="stage-mark">↘</span></article>
+          <article class="stage-card" data-stage="complex"><div class="stage-number">03</div><div class="stage-status" data-stage-status>待运行</div><h3>AGENT / 假项目</h3><p>注入长 agentic system prompt 与七类假工具。检查模型是否主动规划、连续调用，并在多轮后收束到结果。</p><span class="stage-mark">↘</span></article>
+        </div>
+
+        <div class="action-bar">
+          <div class="action-explain"><span class="pulse-ring"></span><span>准备就绪 · 浏览器直连目标</span></div>
+          <div class="action-buttons"><button class="text-button" id="resetBtn" type="button">清除记录</button><button class="stop-button hidden" id="abortBtn" type="button">停止测试</button><button class="primary-button" id="runAllBtn" type="button"><span>开始完整测试</span><b>↗</b></button></div>
+        </div>
+      </section>
+
+      <section class="results-grid" aria-label="检测结果">
+        <div class="panel event-panel">
+          <div class="panel-heading compact"><div><span class="section-index">04</span><h2>事件流</h2></div><span class="live-label"><i></i> LIVE LOG</span></div>
+          <div class="event-log" id="eventLog" aria-live="polite"><div class="empty-log"><span class="empty-cross">＋</span><p>配置目标后开始测试<br /><small>请求事件与工具回合会显示在这里</small></p></div></div>
+        </div>
+        <div class="panel assessment-panel">
+          <div class="panel-heading compact"><div><span class="section-index">05</span><h2>风险评估</h2></div><span class="panel-kicker">HEURISTIC SCORE</span></div>
+          <div class="risk-display"><div class="risk-number" id="riskNumber">—<small>%</small></div><div class="risk-copy"><span id="riskLevel">等待测试</span><p id="riskSummary">完成三阶段探测后，这里会给出可解释的风险信号。</p></div></div>
+          <div class="risk-meter"><span id="riskMeter"></span><i class="meter-tick tick-25"></i><i class="meter-tick tick-50"></i><i class="meter-tick tick-75"></i></div>
+          <div class="finding-list" id="findingList"><div class="finding muted"><span>○</span><p>尚无发现项</p></div></div>
+          <div class="assessment-foot">分数越高 = 行为越偏离预期。网络错误会标记为“无法判定”，不会被伪装成通过。</div>
+        </div>
+      </section>
+
+      <section class="transcript-section" aria-label="阶段输出">
+        <div class="section-heading-row"><div><span class="section-index">06</span><h2>阶段回放</h2></div><span class="panel-kicker">RAW SIGNALS / KEY REDACTED</span></div>
+        <div class="transcript-grid">
+          <article class="transcript-card" data-result-card="simple"><header><div><span class="transcript-index">01</span><h3>Reply pong only</h3></div><span class="result-badge" data-result-status>未运行</span></header><div class="result-body" data-result-output>等待第一阶段结果。</div><footer data-result-meta>—</footer></article>
+          <article class="transcript-card" data-result-card="tool"><header><div><span class="transcript-index">02</span><h3>get_time tool</h3></div><span class="result-badge" data-result-status>未运行</span></header><div class="result-body" data-result-output>等待第二阶段结果。</div><footer data-result-meta>—</footer></article>
+          <article class="transcript-card" data-result-card="complex"><header><div><span class="transcript-index">03</span><h3>Agentic project</h3></div><span class="result-badge" data-result-status>未运行</span></header><div class="result-body" data-result-output>等待第三阶段结果。</div><footer data-result-meta>—</footer></article>
+        </div>
+      </section>
+
+      <section class="footer-note"><span>RELAY WATCH / CLIENT-SIDE ONLY</span><p>这不是渗透工具，也不会执行真实 bash、写入本地文件或生成图片。复杂阶段的工具回执是合成数据，只用于观察模型是否保有工具调用与多轮协作行为。</p><span class="mono">© 2026</span></section>
+    </main>
+  </div>
+  <script src="app.js" defer></script>
+</body>
+</html>

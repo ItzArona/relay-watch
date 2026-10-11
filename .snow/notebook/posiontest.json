@@ -1,0 +1,32 @@
+{
+  "app.js": [
+    {
+      "id": "notebook-1791710409861_bbx530dca",
+      "filePath": "app.js",
+      "note": "index.html 曾因编辑工具重排版（153 行→457 行）：div 配平 73/73、全部 ID/结构均保留；今后读取该文件时不要假设旧行号。",
+      "createdAt": "2026-10-11T17:20:09.861",
+      "updatedAt": "2026-10-11T17:20:09.861"
+    },
+    {
+      "id": "notebook-1791710409861_zrwn0bvm7",
+      "filePath": "app.js",
+      "note": "compat 注意：runComplex 的 system prompt 与工具回执刻意不含任何「探测/模拟/防护」声明，工具结果按真实 harness 风格输出（含 grep『[agent-tool]』前言、ENOENT 错误码、exit_code/duration_ms）。测试这一页时应保持这种「全真」伪装，不要添加澄清性文案。",
+      "createdAt": "2026-10-11T17:20:09.861",
+      "updatedAt": "2026-10-11T17:20:09.861"
+    },
+    {
+      "id": "notebook-1791710409861_mad6v0kbv",
+      "filePath": "app.js",
+      "note": "工具层投毒检测关键设计：normalizeToolName 为严格模式——不在 known 列表且无别名映射的工具调用一律 marked undeclared，产生「未注册工具调用」高危发现项（这是特性：捕获中转注入/改名/模型幻觉）。",
+      "createdAt": "2026-10-11T17:20:09.861",
+      "updatedAt": "2026-10-11T17:20:09.861"
+    },
+    {
+      "id": "notebook-1791703656403_hqql0p75i",
+      "filePath": "app.js",
+      "note": "Relay Watch 纯客户端单页：请求直连用户 BaseURL、不保存 Key。假 Agent 阶段（runComplex）的 system prompt 与工具回执均不含任何「探测/模拟/防护」声明，工具结果按真实 harness 风格输出（内存虚拟工作区，含逐回合自洽文件状态）。",
+      "createdAt": "2026-10-11T15:27:36.403",
+      "updatedAt": "2026-10-11T16:46:13.603"
+    }
+  ]
+}
